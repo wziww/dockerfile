@@ -36,7 +36,7 @@ RUN $HADOOP_PREFIX/bin/hdfs namenode -format
 ADD config /root/.ssh/config
 ADD start.sh /etc/start.sh
 RUN chmod 700 /etc/start.sh
-RUN /usr/sbin/sshd -D & && $HADOOP_PREFIX/etc/hadoop/hadoop-env.sh && $HADOOP_PREFIX/sbin/start-dfs.sh && $HADOOP_PREFIX/bin/hdfs dfs -mkdir -p /user/root
+RUN (/usr/sbin/sshd -D &) && (sleep 3) && ($HADOOP_PREFIX/etc/hadoop/hadoop-env.sh && $HADOOP_PREFIX/sbin/start-dfs.sh && $HADOOP_PREFIX/bin/hdfs dfs -mkdir -p /user/root)
 
 # Hdfs ports
 EXPOSE 50010 50020 50070 50075 50090
