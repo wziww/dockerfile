@@ -34,7 +34,8 @@ ADD yarn-site.xml $HADOOP_PREFIX/etc/hadoop/yarn-site.xml
 
 RUN $HADOOP_PREFIX/bin/hdfs namenode -format
 ADD config /root/.ssh/config
-
+ADD start.sh /etc/start.sh
+RUN chmod 700 /etc/start.sh
 RUN /usr/sbin/sshd -D & && $HADOOP_PREFIX/etc/hadoop/hadoop-env.sh && $HADOOP_PREFIX/sbin/start-dfs.sh && $HADOOP_PREFIX/bin/hdfs dfs -mkdir -p /user/root
 
 # Hdfs ports
@@ -49,3 +50,5 @@ EXPOSE 49707 2122
 EXPOSE 4040 7077 8080 9000 
 
 # RUN service sshd start && $HADOOP_PREFIX/etc/hadoop/hadoop-env.sh && $HADOOP_PREFIX/sbin/start-dfs.sh && $HADOOP_PREFIX/bin/hdfs dfs -put $HADOOP_PREFIX/etc/hadoop/ input
+
+ENTRYPOINT ["/etc/start.sh"]
