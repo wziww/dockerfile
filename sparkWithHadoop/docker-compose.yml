@@ -2,7 +2,7 @@ master:
   tty: true
   image: ms:latest
   environment: 
-    - slave=slave01;slave02
+    - slave=worker01
   hostname: master
   ports:
   - "4040:4040"
@@ -13,14 +13,14 @@ master:
   - "9000:9000"
   - "50070:50070"
   restart: always
-  # command: bash -c "/usr/local/hadoop-spark/spark/sbin/start-master.sh && ping localhost > /dev/null"
+  command: bash -c "/usr/local/hadoop-spark/spark/sbin/start-master.sh && ping localhost > /dev/null"
 
-# worker01:
-#   tty: true
-#   image: ms:latest
-#   links:
-#   - master:master
-#   expose:
-#   - "8081"
-#   restart: always
-#   command: bash -c "/usr/local/hadoop-spark/spark/sbin/start-slave.sh spark://master:7077 && ping localhost >/dev/null"
+worker01:
+  tty: true
+  image: ms:latest
+  links:
+  - master:master
+  expose:
+  - "8081"
+  restart: always
+  command: bash -c "/usr/local/hadoop-spark/spark/sbin/start-slave.sh spark://master:7077 && ping localhost >/dev/null"
