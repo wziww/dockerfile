@@ -45,7 +45,7 @@ RUN curl -L https://github.com/sequenceiq/docker-hadoop-build/releases/download/
 RUN rm -rf $HADOOP_PREFIX/lib/native
 RUN mv /tmp/native $HADOOP_PREFIX/lib
 
-RUN $HADOOP_PREFIX/bin/hdfs namenode -format
+# RUN $HADOOP_PREFIX/bin/hdfs namenode -format
 ADD config /root/.ssh/config
 ADD start.sh /etc/start.sh
 RUN chmod 700 /etc/start.sh
