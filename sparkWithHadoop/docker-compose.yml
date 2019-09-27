@@ -3,6 +3,8 @@ master:
   environment:
     - slave=worker01
   hostname: master
+  links:
+    - worker01:worker01
   ports:
     - "4040:4040"
     - "8042:8042"
