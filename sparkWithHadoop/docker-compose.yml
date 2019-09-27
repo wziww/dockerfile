@@ -1,5 +1,4 @@
 master:
-  tty: true
   image: ms:latest
   environment: 
     - slave=worker01
@@ -16,7 +15,6 @@ master:
   command: bash -c "/usr/local/hadoop-spark/spark/sbin/start-master.sh && ping localhost > /dev/null"
 
 worker01:
-  tty: true
   image: ms:latest
   links:
   - master:master
