@@ -51,6 +51,7 @@ ADD start.sh /etc/start.sh
 RUN chmod 700 /etc/start.sh
 # download native support
 
+RUN $HADOOP_PREFIX/bin/hdfs namenode -format
 
 # Hdfs ports
 EXPOSE 50010 50020 50070 50075 50090
