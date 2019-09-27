@@ -1,4 +1,5 @@
 master:
+  tty: true
   image: ms:latest
   hostname: master
   ports:
@@ -13,6 +14,7 @@ master:
   command: bash -c "/usr/local/hadoop-spark/spark/sbin/start-master.sh && ping localhost > /dev/null"
 
 worker:
+  tty: true
   image: ms:latest
   links:
   - master:master
