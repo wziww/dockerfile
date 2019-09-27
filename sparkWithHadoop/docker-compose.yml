@@ -1,26 +1,35 @@
-master:
-  image: ms:latest
-  environment:
-    - slave=worker01
-  hostname: master
-  links:
-    - worker01:worker01
-  ports:
-    - "4040:4040"
-    - "8042:8042"
-    - "7077:7077"
-    - "8088:8088"
-    - "8081:8080"
-    - "9000:9000"
-    - "50070:50070"
-  restart: always
-  command: /usr/local/hadoop-spark/spark/sbin/start-master.sh && ping localhost > /dev/null
+version: "3"
+services:
+  master:
+    image: ms:latest
+    environment:
+      - slave=worker01
+    hostname: master
+    ports:
+      - "4040:4040"
+      - "8042:8042"
+      - "7077:7077"
+      - "8088:8088"
+      - "8081:8080"
+      - "9000:9000"
+      - "50070:50070"
+    restart: always
+    # networks:
+    #   - hadoop
+    command: /usr/local/hadoop-spark/spark/sbin/start-master.sh && ping localhost > /dev/null
 
-worker01:
-  image: ms:latest
-  links:
-    - master:master
-  expose:
-    - "8081"
-  restart: always
-  command: /usr/local/hadoop-spark/spark/sbin/start-slave.sh spark://master:7077 && ping localhost >/dev/null
+  worker01:
+    image: ms:latest
+    links:
+      - master:master
+    expose:
+      - "8081"
+    restart: always
+    # networks:
+    #   - hadoop
+    command: /usr/local/hadoop-spark/spark/sbin/start-slave.sh spark://master:7077 && ping localhost >/dev/null
+
+networks:
+  default:
+    external:
+      name: hadoop
