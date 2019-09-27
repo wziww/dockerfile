@@ -29,6 +29,8 @@ ENV HADOOP_HDFS_HOME $HADOOP_PREFIX
 ENV HADOOP_MAPRED_HOME $HADOOP_PREFIX
 ENV HADOOP_YARN_HOME $HADOOP_PREFIX
 ENV YARN_CONF_DIR $HADOOP_PREFIX/etc/hadoop
+RUN mkdir -p /disk/hdfs/data
+RUN mkdir -p /disk/hdfs/temp
 
 RUN chmod 764 $HADOOP_PREFIX/etc/hadoop/hadoop-env.sh
 RUN sed -i '/^export JAVA_HOME/ s:.*:export JAVA_HOME=/usr/lib/jvm/java-1.8-openjdk\nexport HADOOP_PREFIX=/usr/local/hadoop-spark/hadoop\nexport HADOOP_HOME=/usr/local/hadoop-spark/hadoop\n:' $HADOOP_PREFIX/etc/hadoop/hadoop-env.sh
