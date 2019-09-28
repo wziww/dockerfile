@@ -1,7 +1,7 @@
 version: "3"
 services:
   master:
-    image: ms:latest
+    image: 358159669/hadoop_with_spark:v0.0.1
     environment:
       - slave=worker01
     hostname: master
@@ -19,7 +19,7 @@ services:
     command: /usr/local/hadoop-spark/spark/sbin/start-master.sh && ping localhost > /dev/null
 
   worker01:
-    image: ms:latest
+    image: 358159669/hadoop_with_spark:v0.0.1
     hostname: worker01
     expose:
       - "8081"
