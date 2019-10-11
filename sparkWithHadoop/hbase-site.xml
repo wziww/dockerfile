@@ -1,6 +1,6 @@
 <configuration>
   <property>
     <name>hbase.rootdir</name>
-    <value>file:///usr/local/hbase/hbase-tmp</value>
+    <value>file:///usr/local/hadoop-spark/hbase-tmp</value>
   </property>
 </configuration>

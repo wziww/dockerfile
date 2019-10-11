@@ -1,9 +1,9 @@
 version: "3"
 services:
   master:
-    image: 358159669/hadoop_with_spark:v0.0.1
+    image: test
     environment:
-      - slave=worker01
+      - slave=master
     hostname: master
     ports:
       - "4040:4040"
@@ -18,15 +18,15 @@ services:
     #   - hadoop
     command: /usr/local/hadoop-spark/spark/sbin/start-master.sh && ping localhost > /dev/null
 
-  worker01:
-    image: 358159669/hadoop_with_spark:v0.0.1
-    hostname: worker01
-    expose:
-      - "8081"
-    restart: always
-    # networks:
-    #   - hadoop
-    command: /usr/local/hadoop-spark/spark/sbin/start-slave.sh spark://master:7077 && ping localhost >/dev/null
+  # worker01:
+  #   image: 358159669/hadoop_with_spark:v0.0.1
+  #   hostname: worker01
+  #   expose:
+  #     - "8081"
+  #   restart: always
+  #   # networks:
+  #   #   - hadoop
+  #   command: /usr/local/hadoop-spark/spark/sbin/start-slave.sh spark://master:7077 && ping localhost >/dev/null
 
 networks:
   default:

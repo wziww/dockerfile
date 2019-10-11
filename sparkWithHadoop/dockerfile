@@ -9,20 +9,18 @@ ENV HADOOP_PREFIX=/usr/local/hadoop-spark/hadoop \
        HADOOP_MAPRED_HOME=/usr/local/hadoop-spark/hadoop \
        HADOOP_YARN_HOME=/usr/local/hadoop-spark/hadoop \
        YARN_CONF_DIR=/usr/local/hadoop-spark/hadoop/etc/hadoop \
-       PATH=$PATH:/usr/local/hadoop-spark/hadoop/bin:/usr/local/hadoop-spark/spark/bin:/usr/local/hadoop-spark/hadoop/hbase
-
+       PATH=$PATH:/usr/local/hadoop-spark/hadoop/bin:/usr/local/hadoop-spark/spark/bin:/usr/local/hadoop-spark/hbase/bin
+ADD ./lib/* /usr/local/hadoop-spark/
 # sshd part
 RUN mkdir -p /tmp/native && \
+       mkdir -p /usr/local/hadoop-spark/hbase-tmp && \
        mkdir -p /usr/local/hadoop-spark && \
        mkdir -p /disk/hdfs/data && \
        mkdir -p /disk/hdfs/temp && \
        # Needed for HBase 2.0+ hbase-shell
        # asciidoctor solves 'NotImplementedError: fstat unimplemented unsupported or native support failed to load'
        # echo "http://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories && \
-       apk add jruby && \
-       apk add jruby-irb && \
-       apk add asciidoctor && \
-       apk --update add wget tar bash coreutils procps vim openssh openrc curl python && \
+       apk --update add wget tar bash coreutils procps vim openssh openrc curl python jruby jruby-irb asciidoctor && \
        ssh-keygen -q -N "" -t dsa -f /etc/ssh/ssh_host_dsa_key && \
        ssh-keygen -q -N "" -t rsa -f /etc/ssh/ssh_host_rsa_key && \
        ssh-keygen -q -N "" -t ecdsa -f /etc/ssh/ssh_host_ecdsa_key && \
@@ -36,13 +34,11 @@ ADD config /root/.ssh/config
 ADD start.sh /etc/start.sh
 # spark part
 WORKDIR /usr/local/hadoop-spark
-
-RUN wget https://archive.apache.org/dist/spark/spark-2.4.4/spark-2.4.4-bin-hadoop2.7.tgz && \
-       tar -zxvf spark-2.4.4-bin-hadoop2.7.tgz && rm spark-2.4.4-bin-hadoop2.7.tgz && \
-       mv spark-2.4.4-bin-hadoop2.7 spark && \
+RUN ls
+# RUN wget https://archive.apache.org/dist/spark/spark-2.4.4/spark-2.4.4-bin-hadoop2.7.tgz && \
+RUN  mv spark-2.4.4-bin-hadoop2.7 spark && \
        # hadoop part
-       wget http://mirror-hk.koddos.net/apache/hadoop/common/hadoop-2.7.7/hadoop-2.7.7.tar.gz && \
-       tar -zxvf hadoop-2.7.7.tar.gz && rm hadoop-2.7.7.tar.gz && \
+       # wget http://mirror-hk.koddos.net/apache/hadoop/common/hadoop-2.7.7/hadoop-2.7.7.tar.gz && \
        mv hadoop-2.7.7 hadoop && \
        chmod 764 $HADOOP_PREFIX/etc/hadoop/hadoop-env.sh && \
        sed -i '/^export JAVA_HOME/ s:.*:export JAVA_HOME=/usr/lib/jvm/java-1.8-openjdk\nexport HADOOP_PREFIX=/usr/local/hadoop-spark/hadoop\nexport HADOOP_HOME=/usr/local/hadoop-spark/hadoop\n:' $HADOOP_PREFIX/etc/hadoop/hadoop-env.sh && \
@@ -51,12 +47,20 @@ RUN wget https://archive.apache.org/dist/spark/spark-2.4.4/spark-2.4.4-bin-hadoo
        rm -rf $HADOOP_PREFIX/lib/native && \
        mv /tmp/native $HADOOP_PREFIX/lib && \
        # hbase part 
-       wget https://mirrors.tuna.tsinghua.edu.cn/apache/hbase/2.1.7/hbase-2.1.7-bin.tar.gz && \
-       tar -zxvf hbase-2.1.7-bin.tar.gz && rm hbase-2.1.7-bin.tar.gz && \
+       # wget https://mirrors.tuna.tsinghua.edu.cn/apache/hbase/2.1.7/hbase-2.1.7-bin.tar.gz && \
        mv hbase-2.1.7 hbase && \
        chmod 764 $HBASE_PREFIX/conf/hbase-env.sh && \
        sed -i '/^export JAVA_HOME/ s:.*:export JAVA_HOME=/usr/lib/jvm/java-1.8-openjd\n:' $HBASE_PREFIX/conf/hbase-env.sh  && \
-       chmod 700 /etc/start.sh 
+       chmod 700 /etc/start.sh && \
+       cp /usr/local/hadoop-spark/hbase/lib/hbase*.jar /usr/local/hadoop-spark/spark/jars/ && \
+       cp /usr/local/hadoop-spark/hbase/lib/guava*.jar /usr/local/hadoop-spark/spark/jars/ && \
+       cp /usr/local/hadoop-spark/hbase/lib/protobuf*.jar /usr/local/hadoop-spark/spark/jars && \
+       cp /usr/local/hadoop-spark/hadoop/share/hadoop/tools/lib/htrace*.jar /usr/local/hadoop-spark/spark/jars/ && \
+       cp /usr/local/hadoop-spark/hadoop/share/hadoop/tools/lib/htrace*.jar /usr/local/hadoop-spark/hbase/lib/ && \
+       mkdir -p /usr/local/hadoop-spark/spark/jars/hbase && cd /usr/local/hadoop-spark/spark/jars/hbase && \
+       wget https://repo.typesafe.com/typesafe/maven-releases/org/apache/spark/spark-examples_2.11/1.6.0-typesafe-001/spark-examples_2.11-1.6.0-typesafe-001.jar && \
+       mv /usr/local/hadoop-spark/spark/conf/spark-env.sh.template /usr/local/hadoop-spark/spark/conf/spark-env.sh && \
+       sed -i "2i export SPARK_DIST_CLASSPATH=\$(/usr/local/hadoop-spark/hadoop/bin/hadoop classpath):\$(/usr/local/hadoop-spark/hbase/bin/hbase classpath):/usr/local/hadoop-spark/spark/jars/hbase/*" /usr/local/hadoop-spark/spark/conf/spark-env.sh
 
 # ssh 远程连接后系统 JAVA_HOME 环境变量会失效，这边直接定义一下
 ADD core-site.xml $HADOOP_PREFIX/etc/hadoop/core-site.xml.template
@@ -78,7 +82,7 @@ EXPOSE 50010 50020 50070 50075 50090 \
        8030 8031 8032 8033 8040 8042 8088 \
        #Other ports
        49707 2122 4040 7077 8080 9000 
-       
+
 # Hbase ports
 EXPOSE 2181 8082 8085 9090 9095 16000 16010 16201 16301
 
