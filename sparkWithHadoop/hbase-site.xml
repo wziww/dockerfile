@@ -3,4 +3,8 @@
     <name>hbase.rootdir</name>
     <value>file:///usr/local/hadoop-spark/hbase-tmp</value>
   </property>
+  <property>
+    <name>hbase.zookeeper.quorum</name>
+    <value>0.0.0.0</value>
+  </property>
 </configuration>
