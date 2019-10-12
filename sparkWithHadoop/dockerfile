@@ -49,7 +49,6 @@ RUN  mv spark-2.4.4-bin-hadoop2.7 spark && \
        mv hbase-2.1.7 hbase && \
        chmod 764 $HBASE_PREFIX/conf/hbase-env.sh && \
        sed -i '/^export JAVA_HOME/ s:.*:export JAVA_HOME=/usr/lib/jvm/java-1.8-openjd\n:' $HBASE_PREFIX/conf/hbase-env.sh  && \
-       chmod 700 /etc/start.sh && \
        cp /usr/local/hadoop-spark/hbase/lib/hbase*.jar /usr/local/hadoop-spark/spark/jars/ && \
        cp /usr/local/hadoop-spark/hbase/lib/guava*.jar /usr/local/hadoop-spark/spark/jars/ && \
        cp /usr/local/hadoop-spark/hbase/lib/protobuf*.jar /usr/local/hadoop-spark/spark/jars && \
@@ -73,6 +72,7 @@ RUN $HADOOP_PREFIX/bin/hdfs namenode -format
 # download native support
 
 ADD start.sh /etc/start.sh
+RUN chmod 700 /etc/start.sh
 
 # Hdfs ports
 EXPOSE 50010 50020 50070 50075 50090 \
