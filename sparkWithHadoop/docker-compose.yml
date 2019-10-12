@@ -14,8 +14,8 @@ services:
       - "9000:9000"
       - "50070:50070"
     restart: always
-    networks:
-      - hadoop
+    # networks:
+    #   - hadoop
     command: /usr/local/hadoop-spark/spark/sbin/start-master.sh && ping localhost > /dev/null
 
   worker01:
@@ -24,8 +24,8 @@ services:
     # expose:
     #   - "8081"
     restart: always
-    networks:
-      - hadoop
+    # networks:
+    #   - hadoop
     command: /usr/local/hadoop-spark/spark/sbin/start-slave.sh spark://master:7077 && ping localhost >/dev/null
 
 networks:
