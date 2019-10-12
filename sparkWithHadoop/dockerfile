@@ -31,10 +31,8 @@ RUN mkdir -p /tmp/native && \
 #hadoop && spark
 
 ADD config /root/.ssh/config
-ADD start.sh /etc/start.sh
 # spark part
 WORKDIR /usr/local/hadoop-spark
-RUN ls
 # RUN wget https://archive.apache.org/dist/spark/spark-2.4.4/spark-2.4.4-bin-hadoop2.7.tgz && \
 RUN  mv spark-2.4.4-bin-hadoop2.7 spark && \
        # hadoop part
@@ -74,6 +72,7 @@ RUN $HADOOP_PREFIX/bin/hdfs namenode -format
 # fixing the libhadoop.so like a boss
 # download native support
 
+ADD start.sh /etc/start.sh
 
 # Hdfs ports
 EXPOSE 50010 50020 50070 50075 50090 \
