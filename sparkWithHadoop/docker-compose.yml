@@ -1,7 +1,7 @@
 version: "3"
 services:
   master:
-    image: test
+    image: 358159669/spark-hadoop-hbase:0.0.1
     environment:
       - slave=master
     hostname: master
