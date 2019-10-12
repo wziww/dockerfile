@@ -9,6 +9,7 @@ ENV HADOOP_PREFIX=/usr/local/hadoop-spark/hadoop \
        HADOOP_MAPRED_HOME=/usr/local/hadoop-spark/hadoop \
        HADOOP_YARN_HOME=/usr/local/hadoop-spark/hadoop \
        YARN_CONF_DIR=/usr/local/hadoop-spark/hadoop/etc/hadoop \
+       SPARK_HOME=/usr/local/hadoop-spark/spark/ \
        PATH=$PATH:/usr/local/hadoop-spark/hadoop/bin:/usr/local/hadoop-spark/spark/bin:/usr/local/hadoop-spark/hbase/bin
 ADD ./lib/* /usr/local/hadoop-spark/
 # sshd part
