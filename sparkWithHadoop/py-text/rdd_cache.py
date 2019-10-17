@@ -1,5 +1,6 @@
 # encoding: utf-8
-from pyspark import SparkConf, StorageLevel
+from pyspark import SparkConf, StorageLevel, sql
+from pyspark.sql.types import Row
 from pyspark.sql import SparkSession
 import traceback
 import os
@@ -36,13 +37,17 @@ spark = SparkSession.builder \
     .getOrCreate()
 sc = spark.sparkContext
 
+sc.setLogLevel("ERROR")
 host = 'master'
 table = 'student'
 conf = {"hbase.zookeeper.quorum": host, "hbase.mapreduce.inputtable": table}
 keyConv = "org.apache.spark.examples.pythonconverters.ImmutableBytesWritableToStringConverter"
 valueConv = "org.apache.spark.examples.pythonconverters.HBaseResultToStringConverter"
-hbase_rdd = sc.newAPIHadoopRDD("org.apache.hadoop.hbase.mapreduce.TableInputFormat", "org.apache.hadoop.hbase.io.ImmutableBytesWritable",
-                               "org.apache.hadoop.hbase.client.Result", keyConverter=keyConv, valueConverter=valueConv, conf=conf)
+hbase_rdd = sc.newAPIHadoopRDD("org.apache.hadoop.hbase.mapreduce.TableInputFormat",
+                               "org.apache.hadoop.hbase.io.ImmutableBytesWritable",
+                               "org.apache.hadoop.hbase.client.Result", keyConverter=keyConv, valueConverter=valueConv,
+                               conf=conf)
+
 count = hbase_rdd.count()
 hbase_rdd.cache()
 output = hbase_rdd.collect()

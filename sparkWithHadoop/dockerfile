@@ -73,7 +73,10 @@ RUN $HADOOP_PREFIX/bin/hdfs namenode -format
 # download native support
 
 ADD start.sh /etc/start.sh
-RUN chmod 700 /etc/start.sh
+RUN chmod 700 /etc/start.sh \
+       # add softlink for snappy to work
+       # https://github.com/big-data-europe/docker-spark/commit/e96a216c06165a11231de76afa225fd0c54da01e#diff-de2dfe904ac98a74495473e67a0d0e2cR20
+       ln -s /lib64/ld-linux-x86-64.so.2 /lib/ld-linux-x86-64.so.2 
 
 # Hdfs ports
 EXPOSE 50010 50020 50070 50075 50090 \
