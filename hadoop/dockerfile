@@ -1,0 +1,88 @@
+FROM openjdk:8-alpine
+
+# ENV JAVA_HOME /usr/lib/jvm/java-1.8-openjdk
+ENV HADOOP_PREFIX=/usr/local/hadoop-spark/hadoop \
+  HADOOP_CONF_DIR=/usr/local/hadoop-spark/hadoop/etc/hadoop \
+  HADOOP_COMMON_HOME=/usr/local/hadoop-spark/hadoop \
+  HADOOP_HDFS_HOME=/usr/local/hadoop-spark/hadoop \
+  HADOOP_MAPRED_HOME=/usr/local/hadoop-spark/hadoop \
+  HADOOP_YARN_HOME=/usr/local/hadoop-spark/hadoop \
+  YARN_CONF_DIR=/usr/local/hadoop-spark/hadoop/etc/hadoop \
+  SPARK_HOME=/usr/local/hadoop-spark/spark/ \
+  PATH=$PATH:/usr/local/hadoop-spark/hadoop/bin:/usr/local/hadoop-spark/spark/bin
+# sshd part
+RUN mkdir -p /tmp/native && \
+  mkdir -p /usr/local/hadoop-spark && \
+  mkdir -p /disk/hdfs/data && \
+  mkdir -p /disk/hdfs/temp && \
+  # Needed for HBase 2.0+ hbase-shell
+  # asciidoctor solves 'NotImplementedError: fstat unimplemented unsupported or native support failed to load'
+  # echo "http://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories && \
+  apk --update add wget tar bash coreutils procps vim openssh openrc curl python jruby jruby-irb asciidoctor && \
+  ssh-keygen -q -N "" -t dsa -f /etc/ssh/ssh_host_dsa_key && \
+  ssh-keygen -q -N "" -t rsa -f /etc/ssh/ssh_host_rsa_key && \
+  ssh-keygen -q -N "" -t ecdsa -f /etc/ssh/ssh_host_ecdsa_key && \
+  ssh-keygen -q -N "" -t ed25519 -f /etc/ssh/ssh_host_ed25519_key && \
+  ssh-keygen -q -N "" -t rsa -f /root/.ssh/id_rsa && \
+  cp /root/.ssh/id_rsa.pub /root/.ssh/authorized_keys && \
+  passwd -u root
+#hadoop && spark
+
+ADD config /root/.ssh/config
+# spark part
+WORKDIR /usr/local/hadoop-spark
+RUN wget https://archive.apache.org/dist/spark/spark-2.4.4/spark-2.4.4-bin-hadoop2.7.tgz && \
+  tar -zxvf spark-2.4.4-bin-hadoop2.7.tgz && \
+  mv spark-2.4.4-bin-hadoop2.7 spark && \
+  # hadoop part
+  wget http://mirror-hk.koddos.net/apache/hadoop/common/hadoop-2.7.7/hadoop-2.7.7.tar.gz && \
+  tar -zxvf hadoop-2.7.7.tar.gz && \
+  mv hadoop-2.7.7 hadoop && \
+  chmod 764 $HADOOP_PREFIX/etc/hadoop/hadoop-env.sh && \
+  sed -i '/^export JAVA_HOME/ s:.*:export JAVA_HOME=/usr/lib/jvm/java-1.8-openjdk\nexport HADOOP_PREFIX=/usr/local/hadoop-spark/hadoop\nexport HADOOP_HOME=/usr/local/hadoop-spark/hadoop\n:' $HADOOP_PREFIX/etc/hadoop/hadoop-env.sh && \
+  sed -i '/^export HADOOP_CONF_DIR/ s:.*:export HADOOP_CONF_DIR=/usr/local/hadoop-spark/hadoop/etc/hadoop/:' $HADOOP_PREFIX/etc/hadoop/hadoop-env.sh && \
+  curl -L https://github.com/sequenceiq/docker-hadoop-build/releases/download/v2.7.1/hadoop-native-64-2.7.1.tgz | tar -xz -C /tmp/native && \
+  rm -rf $HADOOP_PREFIX/lib/native && \
+  mv /tmp/native $HADOOP_PREFIX/lib && \
+  cp /usr/local/hadoop-spark/hadoop/share/hadoop/tools/lib/htrace*.jar /usr/local/hadoop-spark/spark/jars/ && \
+  wget https://repo.typesafe.com/typesafe/maven-releases/org/apache/spark/spark-examples_2.11/1.6.0-typesafe-001/spark-examples_2.11-1.6.0-typesafe-001.jar && \
+  mv /usr/local/hadoop-spark/spark/conf/spark-env.sh.template /usr/local/hadoop-spark/spark/conf/spark-env.sh 
+# ssh 远程连接后系统 JAVA_HOME 环境变量会失效，这边直接定义一下
+ADD core-site.xml $HADOOP_PREFIX/etc/hadoop/core-site.xml.template
+ADD core-site.xml $HADOOP_PREFIX/etc/hadoop/core-site.xml
+ADD hdfs-site.xml $HADOOP_PREFIX/etc/hadoop/hdfs-site.xml
+ADD mapred-site.xml $HADOOP_PREFIX/etc/hadoop/mapred-site.xml
+ADD yarn-site.xml $HADOOP_PREFIX/etc/hadoop/yarn-site.xml
+# RUN $HADOOP_PREFIX/bin/hdfs namenode -format
+RUN $HADOOP_PREFIX/bin/hdfs namenode -format
+# fixing the libhadoop.so like a boss
+# download native support
+
+ADD start.sh /etc/start.sh
+RUN chmod 0777 /etc/start.sh  && \
+  # add softlink for snappy to work
+  # https://github.com/big-data-europe/docker-spark/commit/e96a216c06165a11231de76afa225fd0c54da01e#diff-de2dfe904ac98a74495473e67a0d0e2cR20
+  ln -s /lib64/ld-linux-x86-64.so.2 /lib/ld-linux-x86-64.so.2 
+
+# 50010  dfs.datanode.address	datanode　控制端口
+# 50020  dfs.datanode.ipc.address	datanode的RPC服务器地址和端口
+# 50075  dfs.datanode.http.address	datanode的HTTP服务器和端口     datanode 节点开启
+# 50090  dfs.secondary.http.address 	secondary NameNode web管理端口	
+# 19888  日志查看端口
+# 8030   yarn.resourcemanager.scheduler.address
+# 8031   yarn.resourcemanager.resource-tracker.address
+# 8032   yarn.resourcemanager.address
+# 8033   yarn.resourcemanager.admin.address
+# 8040   yarn.nodemanager.localizer.address
+# 8042   yarn.nodemanager.webapp.address
+# 8088   yarn.resourcemanager.webapp.address，YARN的http端口
+# 8080   hbase.rest.port，HBase REST server的端口
+# 9000   fs.defaultFS，如：hdfs://172.25.40.171:9000
+EXPOSE 50010 50020 50070 50075 50090 \
+  19888 \
+  #Yarn ports
+  8030 8031 8032 8033 8040 8042 8088 \
+  #Other ports
+  49707 2122 4040 7077 8080 9000 
+
+ENTRYPOINT ["/etc/start.sh"]

@@ -1,0 +1,14 @@
+FROM openjdk:8-alpine
+
+RUN apk --update add wget tar bash coreutils procps vim openssh \
+  openrc curl python jruby jruby-irb asciidoctor && \
+  mkdir -p /usr/local/kafka 
+WORKDIR /usr/local/kafka
+# download kafka
+ADD ./kafka_2.12-2.1.0.tgz ./
+RUN mkdir -p /disk/kafka
+WORKDIR /usr/local/kafka/kafka_2.12-2.1.0
+ADD ./server.properties /usr/local/kafka/kafka_2.12-2.1.0/config/
+# 9092 : kafka port
+EXPOSE 9092
+ENTRYPOINT [ "/usr/local/kafka/kafka_2.12-2.1.0/bin/kafka-server-start.sh","/usr/local/kafka/kafka_2.12-2.1.0/config/server.properties" ]

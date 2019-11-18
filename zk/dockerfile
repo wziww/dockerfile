@@ -1,0 +1,17 @@
+FROM openjdk:8-alpine
+
+RUN apk --update add wget tar bash coreutils procps vim openssh \
+  openrc curl python jruby jruby-irb asciidoctor && \
+  mkdir -p /usr/local/zookeeper 
+WORKDIR /usr/local/zookeeper
+# download zk 3.5.6
+RUN mkdir -p /disk/zookeeper && wget https://mirrors.tuna.tsinghua.edu.cn/apache/zookeeper/zookeeper-3.5.6/apache-zookeeper-3.5.6-bin.tar.gz && \
+  tar -zxvf apache-zookeeper-3.5.6-bin.tar.gz
+WORKDIR /usr/local/zookeeper/apache-zookeeper-3.5.6-bin
+# add cfg file
+ADD ./zoo.cfg /usr/local/zookeeper/apache-zookeeper-3.5.6-bin/conf/
+
+# 2181 : zk client port to connect
+# 8080 : zk admin port
+EXPOSE 2181 8080
+ENTRYPOINT [ "/usr/local/zookeeper/apache-zookeeper-3.5.6-bin/bin/zkServer.sh","start-foreground","/usr/local/zookeeper/apache-zookeeper-3.5.6-bin/conf/zoo.cfg" ]
